@@ -1,5 +1,7 @@
 Sub Comment_Macro()
 
+'Declare All variables
+
 Dim other_dictionary As Object
 Set other_dictionary = CreateObject("Scripting.Dictionary")
 Set temp_dict = CreateObject("Scripting.Dictionary")
@@ -26,6 +28,18 @@ Dim to_open As String
 Dim to_move As String
 
 file_path = Application.ActiveWorkbook.Path
+
+'CRITICAL ASSUMPTION: The workbook to be mined for information MUST be placed, alone, in
+'a folder within the folder containing the "Master" workbook.
+
+'For example: The master workbook lives in "C:\Documents and Settings\YourName\Desktop\Reports"
+'Then the new workbook (to be mined for information by this macro) must be placed in "C:\Documents and Settings\YourName\Desktop\Reports\Holding_Bin"
+
+'When the macro has finished running, it will move the new workbook to the Archived folder within Holding_Bin
+
+'So, in this example case, it would be automatically moved to the following directory upon completion of this macro: "C:\Documents and Settings\YourName\Desktop\Holding_Bin\Archived"
+
+'To recap: before running the macro, please ensure that Holding_Bin contains ONLY the new workbook and the Archived folder.
 
 to_open = file_path + "\Holding_Bin\" + "*"
 
