@@ -27,6 +27,9 @@ __It assumes the following:__
 __Here's how it works:__
 
   -Make sure you've got your master workbook in your directory of choice (formatted as explained above).
+
   -Drag and drop the new report into Holding_Bin.
+
   -Run the Macro from the master Workbook
+
   -Enjoy the time-savings and productivity gain of not needing to parse irrelevant information in the new report!
