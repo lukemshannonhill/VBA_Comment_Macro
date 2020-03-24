@@ -1,0 +1,207 @@
+Sub Comment_Macro()
+
+Dim other_dictionary As Object
+Set other_dictionary = CreateObject("Scripting.Dictionary")
+Set temp_dict = CreateObject("Scripting.Dictionary")
+Dim ws As Worksheet
+Dim reference_header As Range
+Dim headers As Range
+Dim file_path As String
+Dim today As Date
+today = Date
+Dim j As Long
+Dim i As Integer
+Dim arr() As String
+Dim v As Variant
+Dim master_dictionary As Dictionary
+
+    Set master_dictionary = New Dictionary
+    Set temp_dict = New Dictionary
+
+Dim master As Object
+
+    Set master = Application.ActiveWorkbook
+
+Dim to_open As String
+Dim to_move As String
+
+file_path = Application.ActiveWorkbook.Path
+
+to_open = file_path + "\Holding_Bin\" + "*"
+
+to_open = Dir(to_open)
+
+to_open = file_path + "\Holding_Bin\" + to_open
+
+Set other_workbook = Workbooks.Open(to_open)
+other_workbook.Activate
+Set ws = other_workbook.ActiveSheet
+Set headers = Range("1:1")
+Set reference_header = headers.Find("Reference ID")
+Dim other_col As Integer: other_col = WorksheetFunction.Match("Reference ID", Sheets("Sheet1").Rows(1), 0)
+
+other_last_row_index = ws.Cells(ws.Rows.Count, other_col).End(xlUp).Row
+
+For i = 2 To other_last_row_index
+    j = Cells(i, other_col)
+    other_dictionary.Add j, Cells(i, (other_col + 1)).Value
+Next i
+
+master.Activate
+
+Set ws = ThisWorkbook.ActiveSheet
+
+Set headers = Range("1:1")
+Set reference_header = headers.Find("Reference ID")
+
+Dim master_col As Integer: master_col = WorksheetFunction.Match("Reference ID", Sheets("master").Rows(1), 0)
+
+master_last_row_index = ws.Cells(ws.Rows.Count, master_col).End(xlUp).Row
+
+For i = 2 To master_last_row_index
+    j = Cells(i, master_col)
+    master_dictionary.Add j, Cells(i, (master_col + 1)).Value
+Next i
+
+Dim a, s, k, z, b, c, d
+
+m_i = master_dictionary.Items
+m_k = master_dictionary.Keys
+
+o_i = other_dictionary.Items
+o_k = other_dictionary.Keys
+
+
+For i = 2 To other_last_row_index
+    Cells(i, master_col) = o_k(i - 2)
+    Cells(i, master_col + 1) = o_i(i - 2)
+Next i
+
+
+Dim added_col As Integer: added_col = WorksheetFunction.Match("Comments", Sheets("master").Rows(1), 0)
+
+Columns(added_col + 1).Insert
+Cells(1, added_col + 1) = today
+
+Dim zz
+Dim lmnop As String
+
+For i = 2 To other_last_row_index
+
+    zz = ws.Cells(i, master_col)
+
+    If master_dictionary.Exists(zz) Then
+        ws.Cells(i, master_col + 2) = master_dictionary.Item(zz)
+        zz = Chr(34) & zz & Chr(34)
+        ws.Cells(i, master_col + 2).AddComment zz
+        Else
+    End If
+
+Next i
+
+to_move = file_path + "\Holding_Bin\" + "*"
+
+to_move = Dir(to_move)
+
+to_move = file_path + "\Holding_Bin\Archived\" + to_move
+
+Dim last_column As Long
+last_column = ws.Cells(1, Columns.Count).End(xlToLeft).Column
+
+Dim y As Integer
+Dim dummy_string, placeholder_string As String
+Dim ref_ID_as_comment As String
+Dim range_checker As Range
+Dim temp_last_row_index As Integer
+Dim r, yy, to_copy, ww
+Dim num As Integer
+Dim temp_index As Integer
+Dim Comment, Content
+
+
+For i = 3 To last_column
+
+    temp_last_row_index = ws.Cells(ws.Rows.Count, master_col + i).End(xlUp).Row
+
+    For j = 2 To temp_last_row_index
+
+        If Not Cells(j, master_col + i).Comment Is Nothing Then
+
+            ref_ID_as_comment = Cells(j, master_col + i).Comment.text
+            Content = Cells(j, (master_col + i)).Value
+
+            temp_dict.Add ref_ID_as_comment, Content
+
+        End If
+
+    Next j
+
+
+    For q = 2 To temp_last_row_index
+
+        Cells(q, master_col + i).Clear
+
+    Next q
+
+
+    For b = 2 To temp_last_row_index
+
+        zz = ws.Cells(b, master_col)
+        zz = Chr(34) & zz & Chr(34)
+
+        If temp_dict.Exists(zz) Then
+            ws.Cells(b, master_col + i) = temp_dict.Item(zz)
+            ws.Cells(b, master_col + i).AddComment zz
+        End If
+
+    Next b
+
+
+    For y = 2 To temp_last_row_index
+
+    If Not Cells(y, (master_col + i)).Comment Is Nothing Then
+
+          zz = Cells(y, (master_col + i)).Comment.text
+          yy = Cells(y, master_col).Value
+          yy = Chr(34) & yy & Chr(34)
+
+          If Not zz = yy Then
+               Cells(y, (master_col + i)).Delete
+          End If
+
+    End If
+
+    Next y
+
+    For y = 2 To temp_last_row_index
+
+       dummy_string = Cells(y, master_col + i).Value
+       placeholder_string = placeholder_string & dummy_string
+
+    Next y
+
+    If (placeholder_string) = "" Then
+
+        With Sheets("master")
+            .Columns(master_col + i).EntireColumn.Delete
+        End With
+
+    End If
+
+    temp_dict.RemoveAll
+
+Next i
+
+With Sheets("master")
+    .Rows((other_last_row_index + 1) & ":" & .Rows.Count).Delete
+End With
+
+master_dictionary.RemoveAll
+other_dictionary.RemoveAll
+
+other_workbook.Close Savechanges:=True
+
+Set fso = CreateObject("scripting.filesystemobject")
+    fso.MoveFile Source:=to_open, Destination:=to_move
+
+End Sub
